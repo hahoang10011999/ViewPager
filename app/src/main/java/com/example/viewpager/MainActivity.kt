@@ -36,17 +36,24 @@ class MainActivity : AppCompatActivity() {
         arrayText.add("FRI")
         arrayText.add("SAT")
 
-        var a = setMonthView(selectedDate, 0)
-        var b = setMonthView(selectedDate.minusMonths(1), 0)
-        var c = setMonthView(selectedDate.plusMonths(1), 0)
-        calendarAdapter = CalendarAdapter(a, this)
+        var a = setMonthView(selectedDate,0)
+        var b = setMonthView(selectedDate.minusMonths(1),0)
+        var c = setMonthView(selectedDate.plusMonths(1),0)
+        calendarAdapter = CalendarAdapter(a,this)
+        var calendarAdapter1 = CalendarAdapter(b,this)
+        var calendarAdapter2 = CalendarAdapter(c,this)
         var array: ArrayList<CalendarAdapter> = arrayListOf()
+        array.add(calendarAdapter1)
         array.add(calendarAdapter)
+        array.add(calendarAdapter2)
+
+        arrayLocaDate.add(selectedDate.minusMonths(1))
         arrayLocaDate.add(selectedDate)
-        viewPage1Adapter =
-            ViewPageAdapter(this, array, arrayLocaDate, startOfWeek, arrayText, view_pager2)
+        arrayLocaDate.add(selectedDate.plusMonths(1))
+
+        viewPage1Adapter = ViewPageAdapter(this,array,arrayLocaDate,startOfWeek,arrayText,view_pager2)
         view_pager2.adapter = viewPage1Adapter
-        view_pager2.setCurrentItem(1, true)
+        view_pager2.setCurrentItem(1,true)
 
     }
 
@@ -150,15 +157,18 @@ class MainActivity : AppCompatActivity() {
                 arrayText.addAll(0, newArrayText)
             }
         }
-            var a = setMonthView(selectedDate, start)
-            var calendarAdapter = CalendarAdapter(a, this)
-            var array: ArrayList<CalendarAdapter> = arrayListOf()
-            array.add(calendarAdapter)
-            var arrayDate: ArrayList<LocalDate> = arrayListOf()
-            arrayDate.add(selectedDate)
-            var viewPage1Adapter =
-                ViewPageAdapter(this, array, arrayDate, start, arrayText, view_pager2)
-            view_pager2.adapter = viewPage1Adapter
-            view_pager2.setCurrentItem(1, true)
+        var a = setMonthView(selectedDate,start)
+        var b = setMonthView(selectedDate.minusMonths(1),start)
+        var c = setMonthView(selectedDate.plusMonths(1),start)
+        var calendarAdapter = CalendarAdapter(a,this)
+        var calendarAdapter1 = CalendarAdapter(b,this)
+        var calendarAdapter2 = CalendarAdapter(c,this)
+        var array: ArrayList<CalendarAdapter> = arrayListOf()
+        array.add(calendarAdapter1)
+        array.add(calendarAdapter)
+        array.add(calendarAdapter2)
+        var viewPage1Adapter = ViewPageAdapter(this,array,arrayLocaDate,start,arrayText,view_pager2)
+        view_pager2.adapter = viewPage1Adapter
+        view_pager2.setCurrentItem(1,true)
     }
 }
