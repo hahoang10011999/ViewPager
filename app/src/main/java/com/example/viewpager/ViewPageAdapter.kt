@@ -3,8 +3,10 @@ package com.example.viewpager
 import android.content.Context
 import android.os.Build
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.GridLayoutManager
@@ -15,6 +17,8 @@ import kotlinx.android.synthetic.main.item_page.view.*
 import java.time.LocalDate
 import androidx.viewpager2.widget.ViewPager2
 import java.time.YearMonth
+import java.util.*
+import kotlin.collections.ArrayList
 
 class ViewPageAdapter(
     var context: Context,
@@ -23,7 +27,8 @@ class ViewPageAdapter(
     var startOfWeek: Int,
     var arratText: ArrayList<String>,
     var viewPager: ViewPager2
-) :RecyclerView.Adapter<ViewPageAdapter.ViewPagerHolder>(){
+) : RecyclerView.Adapter<ViewPageAdapter.ViewPagerHolder>() {
+
     class ViewPagerHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val recyclerView = itemView.calendarRecyclerView
         val monthYearTV = itemView.monthYearTV
@@ -34,6 +39,7 @@ class ViewPageAdapter(
         val view =
             LayoutInflater.from(parent.context).inflate(R.layout.item_page, parent, false)
         val viewHolder = ViewPagerHolder(view)
+
         return viewHolder
     }
 
@@ -43,9 +49,11 @@ class ViewPageAdapter(
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onBindViewHolder(holder: ViewPagerHolder, position: Int) {
+        holder.setIsRecyclable(false)
         var layoutManager = GridLayoutManager(context, 7)
         holder.recyclerView.layoutManager = layoutManager
         holder.recyclerView.adapter = array[position]
+
         var divider = DividerItemDecoration(context, layoutManager.orientation)
         holder.recyclerView.addItemDecoration(divider)
         var divider1 = DividerItemDecoration(context, LinearLayoutManager.HORIZONTAL)
@@ -66,7 +74,6 @@ class ViewPageAdapter(
         }
 
     }
-
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun setMonthView(day: LocalDate, start: Int): ArrayList<ItemCalendar> {
@@ -117,7 +124,8 @@ class ViewPageAdapter(
 
     @RequiresApi(Build.VERSION_CODES.O)
     var runnable = Runnable {
-        var calendar = setMonthView(arrayLocalDate[array.size - 1].plusMonths(1), startOfWeek)
+        var calendar = setMonthView(arrayLocalDate[array.size - 1]
+            .plusMonths(1), startOfWeek)
         var calendarAdapter = CalendarAdapter(calendar, context)
         array.add(calendarAdapter)
         arrayLocalDate.add(arrayLocalDate[array.size - 2].plusMonths(1))
@@ -126,7 +134,8 @@ class ViewPageAdapter(
 
     @RequiresApi(Build.VERSION_CODES.O)
     var run = Runnable {
-        var calendar = setMonthView(arrayLocalDate[0].minusMonths(1), startOfWeek)
+        var calendar = setMonthView(arrayLocalDate[0]
+            .minusMonths(1), startOfWeek)
         var calendarAdapter = CalendarAdapter(calendar, context)
         array.add(0, calendarAdapter)
         arrayLocalDate.add(0, arrayLocalDate[0].minusMonths(1))

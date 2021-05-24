@@ -17,6 +17,7 @@ class CalendarAdapter(var arrayList: ArrayList<ItemCalendar>, var context: Conte
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     var row_index: Int = -1
     var row_index_click: Int = -1
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         if (viewType == THIS_MONTH) {
             val view =
@@ -74,10 +75,7 @@ class CalendarAdapter(var arrayList: ArrayList<ItemCalendar>, var context: Conte
                 cellText.setBackgroundResource(R.drawable.background)
                 row_index_click = -1
             }
-
         }
-
-
     }
 
     inner class NextMonthHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
@@ -85,28 +83,6 @@ class CalendarAdapter(var arrayList: ArrayList<ItemCalendar>, var context: Conte
         fun bind(position: Int) {
             var item = arrayList[position]
             cellText.text = item.date
-            cellText.setOnClickListener(object : DoubleClickListener() {
-                override fun onDoubleClick() {
-                    row_index = position
-                    notifyDataSetChanged()
-                }
-
-                override fun onSingleClick() {
-                    row_index_click = position
-                    notifyDataSetChanged()
-                }
-
-            })
-            if (row_index == position) {
-                cellText.setBackgroundResource(R.drawable.background_doubleclick)
-                row_index = -1
-            } else {
-                cellText.setBackgroundResource(R.drawable.background_item)
-            }
-            if (row_index_click == position) {
-                cellText.setBackgroundResource(R.drawable.background)
-                row_index_click = -1
-            }
         }
     }
 
