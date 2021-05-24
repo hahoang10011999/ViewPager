@@ -1,6 +1,7 @@
 package com.example.viewpager.adapter
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.os.Handler
 import android.os.SystemClock
 import android.view.LayoutInflater
@@ -17,7 +18,10 @@ class CalendarAdapter(var arrayList: ArrayList<ItemCalendar>, var context: Conte
     RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     var row_index: Int = -1
     var row_index_click: Int = -1
-
+    var sharedPreferences = context.getSharedPreferences("SHARED_PERF", Context.MODE_PRIVATE)
+    var editor = sharedPreferences.edit()
+    var month: Int = 0
+    var year: Int = 0
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         if (viewType == THIS_MONTH) {
             val view =
@@ -56,11 +60,21 @@ class CalendarAdapter(var arrayList: ArrayList<ItemCalendar>, var context: Conte
             cellText.setOnClickListener(object : DoubleClickListener() {
                 override fun onDoubleClick() {
                     row_index = position
+                    editor.putString("day", position.toString())
+                    editor.putInt("month", month)
+                    editor.putInt("year", year)
+                    editor.putString("click", "double")
+                    editor.commit()
                     notifyDataSetChanged()
                 }
 
                 override fun onSingleClick() {
                     row_index_click = position
+                    editor.putString("day", position.toString())
+                    editor.putInt("month", month)
+                    editor.putInt("year", year)
+                    editor.putString("click", "click")
+                    editor.commit()
                     notifyDataSetChanged()
                 }
 
@@ -76,6 +90,18 @@ class CalendarAdapter(var arrayList: ArrayList<ItemCalendar>, var context: Conte
                 row_index_click = -1
             }
         }
+    }
+
+    fun setMonthYear(month: Int, year: Int) {
+        this.month = month
+        this.year = year
+        notifyDataSetChanged()
+    }
+
+    fun dayChosed(click: Int, double: Int) {
+        row_index = double
+        row_index_click = click
+        notifyDataSetChanged()
     }
 
     inner class NextMonthHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

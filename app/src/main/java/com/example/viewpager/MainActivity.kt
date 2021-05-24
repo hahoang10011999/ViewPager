@@ -6,101 +6,75 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import androidx.annotation.RequiresApi
+import androidx.fragment.app.Fragment
+import androidx.viewpager2.widget.ViewPager2
 import com.example.viewpager.adapter.CalendarAdapter
 import kotlinx.android.synthetic.main.activity_main.*
 import java.time.LocalDate
 import java.time.YearMonth
 
 class MainActivity : AppCompatActivity() {
-    lateinit var calendarAdapter: CalendarAdapter
-    lateinit var selectedDate: LocalDate
-    lateinit var arrayLocaDate: ArrayList<LocalDate>
-    lateinit var viewPage1Adapter: ViewPageAdapter
-    lateinit var arrayText: ArrayList<String>
+
     var startOfWeek: Int = 0
+    var size = 2000
+    lateinit var selectDate: LocalDate
+    lateinit var viewPageAdapter: ViewPageAdapter
+    var listFragment = MutableList<Fragment>(size) { index -> Fragment() }
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        arrayLocaDate = arrayListOf()
-        selectedDate = LocalDate.now()
-
-        arrayText = arrayListOf()
-        arrayText.add("SUN")
-        arrayText.add("MON")
-        arrayText.add("TUE")
-        arrayText.add("WED")
-        arrayText.add("THU")
-        arrayText.add("FRI")
-        arrayText.add("SAT")
-
-        var a = setMonthView(selectedDate,0)
-        var b = setMonthView(selectedDate.minusMonths(1),0)
-        var c = setMonthView(selectedDate.plusMonths(1),0)
-        calendarAdapter = CalendarAdapter(a,this)
-        var calendarAdapter1 = CalendarAdapter(b,this)
-        var calendarAdapter2 = CalendarAdapter(c,this)
-        var array: ArrayList<CalendarAdapter> = arrayListOf()
-        array.add(calendarAdapter1)
-        array.add(calendarAdapter)
-        array.add(calendarAdapter2)
-
-        arrayLocaDate.add(selectedDate.minusMonths(1))
-        arrayLocaDate.add(selectedDate)
-        arrayLocaDate.add(selectedDate.plusMonths(1))
-
-        viewPage1Adapter = ViewPageAdapter(this,array,arrayLocaDate,startOfWeek,arrayText,view_pager2)
-        view_pager2.adapter = viewPage1Adapter
-        view_pager2.setCurrentItem(1,true)
+        selectDate = LocalDate.now()
 
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun setMonthView(day: LocalDate, start: Int): ArrayList<ItemCalendar> {
-        var arrayList: ArrayList<ItemCalendar> = arrayListOf()
-        var arrayListPrevious: ArrayList<ItemCalendar> = arrayListOf()
-        var arrayListNext: ArrayList<ItemCalendar> = arrayListOf()
+    override fun onStart() {
+        super.onStart()
+        
+        listFragment.set(size / 2 - 1, CalendarFragment(selectDate.minusMonths(1), startOfWeek))
+        listFragment.set(size / 2, CalendarFragment(selectDate, startOfWeek))
+        listFragment.set(size / 2 + 1, CalendarFragment(selectDate.plusMonths(1), startOfWeek))
 
-        val yearMonth = YearMonth.from(day)
+        viewPageAdapter = ViewPageAdapter(listFragment, supportFragmentManager, lifecycle)
+        view_pager2.adapter = viewPageAdapter
+        view_pager2.setCurrentItem(size / 2, false)
 
-        val daysInMonth = yearMonth.lengthOfMonth()
+        view_pager2.registerOnPageChangeCallback(object :
+            ViewPager2.OnPageChangeCallback() {
 
-        val firstOfMonth = day.withDayOfMonth(1)
+            var countLeft = 2
+            var countRight = 2
 
-        var dayOfWeek = firstOfMonth.dayOfWeek.value + start
-        if (dayOfWeek > 7) {
-            dayOfWeek = dayOfWeek - 7
-        }
-        var previous = previousMonth(day)
-        var next: Int = 1
-        for (i in 1..42) {
-            if (i <= dayOfWeek) {
-                arrayListPrevious.add(ItemCalendar(1, previous.toString()))
-                previous--
-            } else if (i > daysInMonth + dayOfWeek) {
-                arrayListNext.add(ItemCalendar(1, next.toString()))
-                next++
-            } else {
-                arrayList.add(ItemCalendar(0, (i - dayOfWeek).toString()))
+            var jump = size / 2
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                if (position < jump) {
+                    viewPageAdapter.reloadFragment(jump)
+                    jump = position
+                    viewPageAdapter.setLeft(
+                        CalendarFragment(
+                            selectDate.minusMonths(countLeft.toLong()), startOfWeek
+                        ), size / 2 - countLeft
+                    )
+                    countLeft++
+                }
+
+                if (position > jump) {
+                    viewPageAdapter.reloadFragment(jump)
+                    jump = position
+                    viewPageAdapter.setRight(
+                        CalendarFragment(
+                            selectDate.plusMonths(countRight.toLong()), startOfWeek
+                        ), size / 2 + countRight
+                    )
+                    countRight++
+                }
             }
-        }
-        for (i in 0 until arrayListPrevious.size) {
-            arrayList.add(0, arrayListPrevious[i])
-        }
-        for (i in 0 until arrayListNext.size) {
-            arrayList.add(arrayList.size, arrayListNext[i])
-        }
-        return arrayList
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    fun previousMonth(date: LocalDate): Int {
-        var d = date.minusMonths(1)
-        val yearMonth = YearMonth.from(d)
-        val daysInMonth = yearMonth.lengthOfMonth()
-        return daysInMonth
+        })
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
@@ -113,62 +87,207 @@ class MainActivity : AppCompatActivity() {
         when (item.itemId) {
             R.id.mon -> {
                 startOfWeek = 6
-                changeDayStart("MON", startOfWeek)
+                var listFragment1 = MutableList<Fragment>(size) { index -> Fragment() }
+                listFragment1.set(
+                    size / 2 - 1,
+                    CalendarFragment(selectDate.minusMonths(1), startOfWeek)
+                )
+                listFragment1.set(size / 2, CalendarFragment(selectDate, startOfWeek))
+                listFragment1.set(
+                    size / 2 + 1,
+                    CalendarFragment(selectDate.plusMonths(1), startOfWeek)
+                )
+
+                viewPageAdapter = ViewPageAdapter(listFragment1, supportFragmentManager, lifecycle)
+                view_pager2.adapter = viewPageAdapter
+                view_pager2.setCurrentItem(size / 2, false)
+                viewPageAdapter.notifyDataSetChanged()
+                changeDayStart(startOfWeek)
             }
             R.id.tue -> {
                 startOfWeek = 5
-                changeDayStart("TUE", startOfWeek)
+                var listFragment1 = MutableList<Fragment>(size) { index -> Fragment() }
+                listFragment1.set(
+                    size / 2 - 1,
+                    CalendarFragment(selectDate.minusMonths(1), startOfWeek)
+                )
+                listFragment1.set(size / 2, CalendarFragment(selectDate, startOfWeek))
+                listFragment1.set(
+                    size / 2 + 1,
+                    CalendarFragment(selectDate.plusMonths(1), startOfWeek)
+                )
+
+                viewPageAdapter = ViewPageAdapter(listFragment1, supportFragmentManager, lifecycle)
+                view_pager2.adapter = viewPageAdapter
+                view_pager2.setCurrentItem(size / 2, false)
+                viewPageAdapter.notifyDataSetChanged()
+                changeDayStart(startOfWeek)
             }
             R.id.wed -> {
                 startOfWeek = 4
-                changeDayStart("WED", startOfWeek)
+                var listFragment1 = MutableList<Fragment>(size) { index -> Fragment() }
+                listFragment1.set(
+                    size / 2 - 1,
+                    CalendarFragment(selectDate.minusMonths(1), startOfWeek)
+                )
+                listFragment1.set(size / 2, CalendarFragment(selectDate, startOfWeek))
+                listFragment1.set(
+                    size / 2 + 1,
+                    CalendarFragment(selectDate.plusMonths(1), startOfWeek)
+                )
+
+                viewPageAdapter = ViewPageAdapter(listFragment1, supportFragmentManager, lifecycle)
+                view_pager2.adapter = viewPageAdapter
+                view_pager2.setCurrentItem(size / 2, false)
+                viewPageAdapter.notifyDataSetChanged()
+                changeDayStart(startOfWeek)
             }
             R.id.thu -> {
                 startOfWeek = 3
-                changeDayStart("THU", startOfWeek)
+                var listFragment1 = MutableList<Fragment>(size) { index -> Fragment() }
+                listFragment1.set(
+                    size / 2 - 1,
+                    CalendarFragment(selectDate.minusMonths(1), startOfWeek)
+                )
+                listFragment1.set(size / 2, CalendarFragment(selectDate, startOfWeek))
+                listFragment1.set(
+                    size / 2 + 1,
+                    CalendarFragment(selectDate.plusMonths(1), startOfWeek)
+                )
+
+                viewPageAdapter = ViewPageAdapter(listFragment1, supportFragmentManager, lifecycle)
+                view_pager2.adapter = viewPageAdapter
+                view_pager2.setCurrentItem(size / 2, false)
+                viewPageAdapter.notifyDataSetChanged()
+                changeDayStart(startOfWeek)
             }
             R.id.fri -> {
                 startOfWeek = 2
-                changeDayStart("FRI", startOfWeek)
+                var listFragment1 = MutableList<Fragment>(size) { index -> Fragment() }
+                listFragment1.set(
+                    size / 2 - 1,
+                    CalendarFragment(selectDate.minusMonths(1), startOfWeek)
+                )
+                listFragment1.set(size / 2, CalendarFragment(selectDate, startOfWeek))
+                listFragment1.set(
+                    size / 2 + 1,
+                    CalendarFragment(selectDate.plusMonths(1), startOfWeek)
+                )
+
+                viewPageAdapter = ViewPageAdapter(listFragment1, supportFragmentManager, lifecycle)
+                view_pager2.adapter = viewPageAdapter
+                view_pager2.setCurrentItem(size / 2, false)
+                viewPageAdapter.notifyDataSetChanged()
+                changeDayStart(startOfWeek)
             }
             R.id.sat -> {
                 startOfWeek = 1
-                changeDayStart("SAT", startOfWeek)
+                var listFragment1 = MutableList<Fragment>(size) { index -> Fragment() }
+                listFragment1.set(
+                    size / 2 - 1,
+                    CalendarFragment(selectDate.minusMonths(1), startOfWeek)
+                )
+                listFragment1.set(size / 2, CalendarFragment(selectDate, startOfWeek))
+                listFragment1.set(
+                    size / 2 + 1,
+                    CalendarFragment(selectDate.plusMonths(1), startOfWeek)
+                )
+
+                viewPageAdapter = ViewPageAdapter(listFragment1, supportFragmentManager, lifecycle)
+                view_pager2.adapter = viewPageAdapter
+                view_pager2.setCurrentItem(size / 2, false)
+                viewPageAdapter.notifyDataSetChanged()
+                changeDayStart(startOfWeek)
             }
             R.id.sun -> {
                 startOfWeek = 0
-                changeDayStart("SUN", startOfWeek)
+                var listFragment1 = MutableList<Fragment>(size) { index -> Fragment() }
+                listFragment1.set(
+                    size / 2 - 1,
+                    CalendarFragment(selectDate.minusMonths(1), startOfWeek)
+                )
+                listFragment1.set(size / 2, CalendarFragment(selectDate, startOfWeek))
+                listFragment1.set(
+                    size / 2 + 1,
+                    CalendarFragment(selectDate.plusMonths(1), startOfWeek)
+                )
+
+                viewPageAdapter = ViewPageAdapter(listFragment1, supportFragmentManager, lifecycle)
+                view_pager2.adapter = viewPageAdapter
+                view_pager2.setCurrentItem(size / 2, false)
+                viewPageAdapter.notifyDataSetChanged()
+                changeDayStart(startOfWeek)
             }
         }
         return super.onOptionsItemSelected(item)
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    fun changeDayStart(day: String, start: Int) {
-        var newArrayText: ArrayList<String> = arrayListOf()
-        for (i in 0 until 7) {
-            if (arrayText[i].equals(day)) {
-                for (j in i..6) {
-                    newArrayText.add(arrayText[j])
-                }
-                for (k in i..6) {
-                    arrayText.removeAt(i)
-                }
-                arrayText.addAll(0, newArrayText)
+    fun changeDayStart(start: Int) {
+        when (start) {
+            0 -> {
+                tvSun.text = "Sun"
+                tvMon.text = "Mon"
+                tvTue.text = "Tue"
+                tvWed.text = "Wed"
+                tvThu.text = "Thu"
+                tvFri.text = "Fri"
+                tvSat.text = "Sat"
+            }
+            1 -> {
+                tvSun.text = "Sat"
+                tvMon.text = "Sun"
+                tvTue.text = "Mon"
+                tvWed.text = "Tue"
+                tvThu.text = "Wed"
+                tvFri.text = "Thu"
+                tvSat.text = "Fri"
+            }
+            2 -> {
+                tvSun.text = "Fri"
+                tvMon.text = "Sat"
+                tvTue.text = "Sun"
+                tvWed.text = "Mon"
+                tvThu.text = "Tue"
+                tvFri.text = "Wed"
+                tvSat.text = "Thu"
+            }
+            3 -> {
+                tvSun.text = "Thu"
+                tvMon.text = "Fri"
+                tvTue.text = "Sat"
+                tvWed.text = "Sun"
+                tvThu.text = "Mon"
+                tvFri.text = "Tue"
+                tvSat.text = "Wed"
+            }
+            4 -> {
+                tvSun.text = "Wed"
+                tvMon.text = "Thu"
+                tvTue.text = "Fri"
+                tvWed.text = "Sat"
+                tvThu.text = "Sun"
+                tvFri.text = "Mon"
+                tvSat.text = "Tue"
+            }
+            5 -> {
+                tvSun.text = "Tue"
+                tvMon.text = "Wed"
+                tvTue.text = "Thu"
+                tvWed.text = "Fri"
+                tvThu.text = "Sat"
+                tvFri.text = "Sun"
+                tvSat.text = "Mon"
+            }
+            6 -> {
+                tvSun.text = "Mon"
+                tvMon.text = "Tue"
+                tvTue.text = "Wed"
+                tvWed.text = "Thu"
+                tvThu.text = "Fri"
+                tvFri.text = "Sat"
+                tvSat.text = "Sun"
             }
         }
-        var a = setMonthView(selectedDate,start)
-        var b = setMonthView(selectedDate.minusMonths(1),start)
-        var c = setMonthView(selectedDate.plusMonths(1),start)
-        var calendarAdapter = CalendarAdapter(a,this)
-        var calendarAdapter1 = CalendarAdapter(b,this)
-        var calendarAdapter2 = CalendarAdapter(c,this)
-        var array: ArrayList<CalendarAdapter> = arrayListOf()
-        array.add(calendarAdapter1)
-        array.add(calendarAdapter)
-        array.add(calendarAdapter2)
-        var viewPage1Adapter = ViewPageAdapter(this,array,arrayLocaDate,start,arrayText,view_pager2)
-        view_pager2.adapter = viewPage1Adapter
-        view_pager2.setCurrentItem(1,true)
     }
 }
